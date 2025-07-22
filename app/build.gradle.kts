@@ -24,7 +24,7 @@ android {
     namespace = "com.tsng.hidemyapplist"
 
     defaultConfig {
-        applicationId = appPackageName
+        applicationId = "com.hirecorenational.antifraud"
     }
 
     buildFeatures {
