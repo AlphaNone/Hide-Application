@@ -1,5 +1,6 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.BaseExtension
+import org.gradle.api.tasks.compile.JavaCompile
 import org.jetbrains.kotlin.konan.properties.Properties
 
 plugins {
@@ -36,8 +37,9 @@ val appPackageName by extra("com.hicorenational.antifraud")
 val androidSourceCompatibility = JavaVersion.VERSION_21
 val androidTargetCompatibility = JavaVersion.VERSION_21
 
-val localProperties = Properties()
-localProperties.load(file("local.properties").inputStream())
+val localProperties = Properties().apply {
+    load(file("local.properties").inputStream())
+}
 val officialBuild by extra(localProperties.getProperty("officialBuild", "false") == "true")
 
 tasks.register("clean", Delete::class) {
@@ -54,8 +56,9 @@ fun Project.configureBaseExtension() {
             targetSdk = targetSdkVer
             versionCode = gitCommitCount
             versionName = appVerName
-            if (localProperties.getProperty("buildWithGitSuffix").toBoolean())
+            if (localProperties.getProperty("buildWithGitSuffix")?.toBoolean() == true) {
                 versionNameSuffix = ".r${gitCommitCount}.${gitCommitHash}"
+            }
 
             consumerProguardFiles("proguard-rules.pro")
         }
@@ -100,5 +103,20 @@ subprojects {
     }
     plugins.withId("com.android.library") {
         configureBaseExtension()
+    }
+}
+
+// 修复后的部分 - 使用 afterEvaluate 确保路径正确
+allprojects {
+    afterEvaluate {
+        tasks.withType<JavaCompile> {
+            // 使用绝对路径确保在所有模块中都能找到文件
+            val frameworkPath = "${rootProject.projectDir}/app/libs/framework.jar"
+            if (file(frameworkPath).exists()) {
+                options.compilerArgs.add("-Xbootclasspath/p:$frameworkPath")
+            } else {
+                logger.warn("framework.jar not found at $frameworkPath")
+            }
+        }
     }
 }

@@ -110,7 +110,8 @@ afterEvaluate {
 dependencies {
     implementation(projects.common)
     runtimeOnly(projects.xposed)
-
+    // 在 app 模块内使用相对路径
+    compileOnly(files("libs/framework.jar"))
     implementation(platform(libs.com.google.firebase.bom))
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
